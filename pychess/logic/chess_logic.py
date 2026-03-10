@@ -101,6 +101,12 @@ class ChessLogic:
         index += (8 - int(coordinates[1]))*8
         return index
     
+    def stalemated() -> bool:
+        return False
+    
+    def checkmated() -> bool:
+        return False
+    
     def play_move(self, move: str) -> str:
         """
         Function to make a move if it is a valid move. This function is called everytime a move in made on the board
@@ -125,6 +131,8 @@ class ChessLogic:
         
         notation = self.move_if_valid_dispatch[moving_piece](move)
         
+        
+        #Probably won't need this since we already have to indicate it in notation
         if (self.checkmated()):
             #todo should keep track of whose move it is since it'll save time here
             self.result = "b"
