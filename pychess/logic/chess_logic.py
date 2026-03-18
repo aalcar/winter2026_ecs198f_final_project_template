@@ -10,11 +10,11 @@ class MoveInfo:
         Is the move en passant
         Is the move a castle
         """
-    self.player = "White"
-    self.previous_move = ""
-    self.is_valid = False
-    self.en_passant = False
-    self.castle = False
+        self.player = "White"
+        self.previous_move = ""
+        self.is_valid = False
+        self.en_passant = False
+        self.castle = False
 
 class ChessLogic:
     def __init__(self):
