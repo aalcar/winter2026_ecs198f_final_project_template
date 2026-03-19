@@ -308,8 +308,6 @@ class ChessLogic:
         Returns:
             str: Extended Chess Notation for the move, if valid. Empty str if the move is invalid
         """
-        # stalemate if you can't do shit                                                                                                                                                                                                                                                                                                                        
-
         # parsing
         start_pos = move[0:2]
         end_pos = move[2: 4]
