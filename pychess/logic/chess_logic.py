@@ -118,20 +118,67 @@ class ChessLogic:
         return valid_moves
     
     def _get_bishop_moves(self, row: int, col: int) -> list:
-        # TODO
-        return []
+        valid_moves = []
+        directions = [(-1 ,1), (1 ,1), (1, -1), (-1, -1)]
+
+        # simulate slide in all directions
+        for direction in directions:
+            new_row, new_col = row + direction[0], col + direction[1]
+
+            while self.is_in_bounds(new_row, new_col):
+                if self.is_own_piece(new_row, new_col): # want to continue if empty or enemy
+                    break
+
+                valid_moves.append((new_row, new_col))
+
+                if self.is_opp_piece(new_row, new_col):
+                    break
+
+                new_row += direction[0]
+                new_col += direction[1]
+
+
+        return valid_moves
     
-    def _get_rook_moves(self, row: int, col: int,) -> list:
-        # TODO
-        return []
+    def _get_rook_moves(self, row: int, col: int) -> list:
+        valid_moves = []
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+
+        # simulate slide in all directions
+        for direction in directions:
+            new_row, new_col = row + direction[0], col + direction[1]
+
+            while self.is_in_bounds(new_row, new_col):
+                if self.is_own_piece(new_row, new_col): # want to continue if empty or enemy
+                    break
+
+                valid_moves.append((new_row, new_col))
+
+                if self.is_opp_piece(new_row, new_col):
+                    break
+
+                new_row += direction[0]
+                new_col += direction[1]
+
+        return valid_moves
     
     def _get_queen_moves(self, row: int, col: int) -> list:
-        # TODO
-        return []
+        return self._get_bishop_moves(row, col) + self._get_rook_moves(row, col)
 
     def _get_king_moves(self, row: int, col: int) -> list:
-        # TODO
-        return []
+        valid_moves = []
+        directions = [
+            (-1 ,1), (1 ,1), (1, -1), (-1, -1),
+            (0, 1), (1, 0), (0, -1), (-1, 0)   
+        ]
+
+        for direction in directions:
+            new_row, new_col = row + direction[0], col + direction[1]
+
+            if self.is_in_bounds(new_row, new_col) and not self.is_own_piece(new_row, new_col):
+                valid_moves.append((new_row, new_col))
+
+        return valid_moves
 
     def play_move(self, move: str) -> str:
         # TODO
