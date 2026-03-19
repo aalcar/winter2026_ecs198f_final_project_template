@@ -270,7 +270,6 @@ class ChessLogic:
         return self._get_bishop_moves(row, col) + self._get_rook_moves(row, col)
 
     def _get_king_moves(self, row: int, col: int) -> list:
-        #TODO castling, checking
         valid_moves = []
         directions = [
             (-1 ,1), (1 ,1), (1, -1), (-1, -1),
@@ -284,9 +283,8 @@ class ChessLogic:
                 valid_moves.append((new_row, new_col))
 
         # castling
-        opponent = "Black" if self.current_player == "White" else "White"
         pos = (row, col)
-        if not self.pieces_moved[pos]: # castling is available
+        if pos in self.pieces_moved and not self.pieces_moved[pos]: # castling is available
             # queenside
             if not self.pieces_moved[(row, 0)] \
             and all(self.board[row][c] == "" for c in [1, 2, 3]):
