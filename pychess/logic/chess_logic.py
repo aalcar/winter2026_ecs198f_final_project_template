@@ -1,5 +1,3 @@
-from pychess.main import board
-
 class ChessLogic:
     def __init__(self):
         """
@@ -46,25 +44,25 @@ class ChessLogic:
     def is_in_bounds(self, row: int, col: int) -> bool:
         return 0 <= row < 8 and 0 <= col < 8
 
-    def is_own_piece(self, row: int, col: int, player: str) -> bool:
+    def is_own_piece(self, row: int, col: int) -> bool:
         # Starting a move
         piece = self.board[row][col]
 
         if piece == "":
             return False
         
-        if player == "White":
+        if self.current_player == "White":
             return piece.isupper()
         else:
             return piece.islower()
     
-    def is_opp_piece(self, row: int, col: int, player: str) -> bool:
+    def is_opp_piece(self, row: int, col: int) -> bool:
         piece = self.board[row][col]
 
         if piece == "":
             return False
         
-        if player == "White":
+        if self.current_player == "White":
             return piece.islower()
         else:
             return piece.isupper()
@@ -81,7 +79,7 @@ class ChessLogic:
 
         for row in range(8):
             for col in range(8):
-                if self.is_own_piece(row, col, self.current_player):
+                if self.is_own_piece(row, col):
                     valid_moves = self._get_valid_moves_for_piece(row, col)
                     if valid_moves:
                         self.valid_moves_dict[(row, col)] = valid_moves
@@ -98,29 +96,40 @@ class ChessLogic:
             'K': self._get_king_moves,
         }
 
-        return validator[piece](row, col, self.current_player)
+        return validator[piece](row, col)
     
-    def _get_pawn_moves(self, row: int, col: int, player: str) -> list:
+    def _get_pawn_moves(self, row: int, col: int) -> list:
         # TODO
         return []
     
-    def _get_knight_moves(self, row: int, col: int, player: str) -> list:
+    def _get_knight_moves(self, row: int, col: int) -> list:
+        # Only 8 possible moves a knight can do 
+        valid_moves = []
+        offsets = [
+            (-2, 1), (-1, 2), (1, 2), (2, 1),
+            (2, -1), (1, -2), (-1, -2), (-2, -1)
+        ]
+
+        for offset in offsets:
+            new_row, new_col = row + offset[0], col + offset[1]
+            if self.is_in_bounds(new_row, new_col) and not self.is_own_piece(new_row, new_col):
+                valid_moves.append((new_row, new_col))
+
+        return valid_moves
+    
+    def _get_bishop_moves(self, row: int, col: int) -> list:
         # TODO
         return []
     
-    def _get_bishop_moves(self, row: int, col: int, player: str) -> list:
+    def _get_rook_moves(self, row: int, col: int,) -> list:
         # TODO
         return []
     
-    def _get_rook_moves(self, row: int, col: int, player: str) -> list:
-        # TODO
-        return []
-    
-    def _get_queen_moves(self, row: int, col: int, player: str) -> list:
+    def _get_queen_moves(self, row: int, col: int) -> list:
         # TODO
         return []
 
-    def _get_king_moves(self, row: int, col: int, player: str) -> list:
+    def _get_king_moves(self, row: int, col: int) -> list:
         # TODO
         return []
 
