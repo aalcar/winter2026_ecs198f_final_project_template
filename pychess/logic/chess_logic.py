@@ -32,7 +32,14 @@ class ChessLogic:
         self.result = ""
         self.current_player = "White"
         self.last_move = None # for en passant
-        self.pieces_moved = {} # for castling
+        self.pieces_moved = { # for castling
+            (7, 4): False, # white king
+            (7, 0): False, # white queenside rook
+            (7, 7): False, # white kingside rook
+            (0, 4): False, # black king
+            (0, 0): False, # black queenside rook
+            (0, 7): False  # black kingside rook
+        } 
 
         # (row, col) -> [validmove1, validmove2, ...]
         self.valid_moves_dict = {} # so checking isnt a pain in the ass
@@ -81,6 +88,11 @@ class ChessLogic:
         
         return False
     
+    def update_pieces_moved(self, moving_piece: str, row: int, col: int):
+        if moving_piece.lower() == "k":
+            self.pieces_moved[(row, col)] = True
+        elif moving_piece.lower() == "r":
+            self.pieces_moved[(row, col)] = True
     
     def _build_valid_moves(self):
         # dictionary gets rebuilt here
@@ -217,6 +229,16 @@ class ChessLogic:
             if self.is_in_bounds(new_row, new_col) and not self.is_own_piece(new_row, new_col):
                 valid_moves.append((new_row, new_col))
 
+        # castling
+        pos = (row, col)
+        if not self.pieces_moved[pos]: # castling is available
+            # queenside
+            if not self.pieces_moved[(row, 0)] and all(self.board[row][c] == "" for c in [1, 2, 3]):
+                valid_moves.append((row, 2))
+            # kingside
+            if not self.pieces_moved[(row, 7)] and all(self.board[row][c] == "" for c in [5, 6]):
+                valid_moves.append((row, 6))
+
         return valid_moves
 
     def play_move(self, move: str) -> str:
@@ -286,8 +308,9 @@ class ChessLogic:
                 notation += "=Q"
         
         # update properties
+        self.update_pieces_moved(moving_piece, start_row, start_col)
+
         self.last_move = (start_row, start_col, end_row, end_col)
-        # TODO track pieces moved
         self.current_player = "Black" if self.current_player == "White" else "White"
 
         self._build_valid_moves()
