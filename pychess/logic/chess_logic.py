@@ -73,6 +73,15 @@ class ChessLogic:
 
         return (row, col)
     
+    def is_move_promotion(self, moving_piece: str, row: int):
+        if moving_piece == "p" and row == 0:
+            return True
+        elif moving_piece == "P" and row == 7:
+            return True
+        
+        return False
+    
+    
     def _build_valid_moves(self):
         # dictionary gets rebuilt here
         self.valid_moves_dict = {}
@@ -99,8 +108,37 @@ class ChessLogic:
         return validator[piece](row, col)
     
     def _get_pawn_moves(self, row: int, col: int) -> list:
-        # TODO
-        return []
+        valid_moves = []
+
+        # direction changes based on color
+        piece = self.board[row][col]
+        if piece.isupper():
+            direction = -1
+            # to determine if pawn is allowed to move 2 spaces
+            starting_row = 6
+        else:
+            direction = 1
+            starting_row = 1
+
+        # check 1 forward and 2 forward afterwards
+        one_forward = (row + direction ,col)
+        if self.is_in_bounds(one_forward[0], one_forward[1]) \
+        and self.board[one_forward[0]][one_forward[1]] == "":
+            valid_moves.append(one_forward)
+
+            if row == starting_row:
+                two_forward = (row + 2 * direction, col)
+                # no need check in_bounds bc starting pos is always valid
+                if self.board[two_forward[0]][two_forward[1]] == "":
+                    valid_moves.append(two_forward)
+        
+        for diagonal in [-1, 1]:
+            potential_capture = (row + direction, col + diagonal)
+            if self.is_in_bounds(potential_capture[0], potential_capture[1]) \
+            and self.is_opp_piece(potential_capture[0], potential_capture[1]):
+                valid_moves.append(potential_capture)
+
+        return valid_moves
     
     def _get_knight_moves(self, row: int, col: int) -> list:
         # Only 8 possible moves a knight can do 
@@ -166,6 +204,7 @@ class ChessLogic:
         return self._get_bishop_moves(row, col) + self._get_rook_moves(row, col)
 
     def _get_king_moves(self, row: int, col: int) -> list:
+        #TODO castling, checking
         valid_moves = []
         directions = [
             (-1 ,1), (1 ,1), (1, -1), (-1, -1),
@@ -181,7 +220,6 @@ class ChessLogic:
         return valid_moves
 
     def play_move(self, move: str) -> str:
-        # TODO
         """
         Function to make a move if it is a valid move. This function is called everytime a move in made on the board
 
@@ -194,4 +232,48 @@ class ChessLogic:
             str: Extended Chess Notation for the move, if valid. Empty str if the move is invalid
         """
 
-        return ""
+        # parsing
+        start_pos = move[0:2]
+        end_pos = move[2: 4]
+
+        start_row, start_col = self.get_board_index(start_pos)
+        end_row, end_col = self.get_board_index(end_pos)
+
+        # start pos never added to dict if there aren't any valid moves from that pos
+        if (start_row, start_col) not in self.valid_moves_dict:
+            return ""
+        
+        if (end_row, end_col) not in self.valid_moves_dict[(start_row, start_col)]:
+            return ""
+        
+        # initiate move
+        moving_piece = self.board[start_row][start_col]
+        is_capture = self.board[end_row][end_col] != ""
+        is_promotion = self.is_move_promotion(moving_piece, end_row)
+
+        # update board
+        self.board[start_row][start_col] = ""
+        self.board[end_row][end_col] = moving_piece
+
+        # do notation?
+        # TODO is this right lol
+        notation = "" if moving_piece.lower() == "p" else f"{moving_piece}"
+
+        if is_capture:
+            notation += f"{start_pos}x{end_pos}"
+        else:
+            notation += f"{start_pos}{end_pos}"
+        
+        if is_promotion:
+            notation += "=Q"
+
+        # TODO castling notation
+        
+        # update properties
+        self.last_move = (start_row, start_col, end_row, end_col)
+        # TODO track pieces moved
+        self.current_player = "Black" if self.current_player == "White" else "White"
+
+        self._build_valid_moves()
+
+        return notation
