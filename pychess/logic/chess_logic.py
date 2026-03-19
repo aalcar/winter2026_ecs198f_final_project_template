@@ -118,6 +118,24 @@ class ChessLogic:
     def update_pieces_moved(self, row: int, col: int):
         if (row, col) in self.pieces_moved:
             self.pieces_moved[(row, col)] = True
+
+    # mimic every possible move to see if there's a way out of check
+    def has_legal_move(self, player: str):
+        for (start_row, start_col), moves in self.valid_moves_dict.items():
+            for (end_row, end_col) in moves:
+                original_board = [row[:] for row in self.board]
+                piece = self.board[start_row][start_col]
+                self.board[start_row][start_col] = ""
+                self.board[end_row][end_col] = piece
+
+                still_in_check = self.is_king_in_check(player)
+
+                self.board = original_board
+
+                if not still_in_check:
+                    return True
+        # no way out of check
+        return False
     
     def _build_valid_moves(self):
         # dictionary gets rebuilt here
@@ -266,23 +284,16 @@ class ChessLogic:
                 valid_moves.append((new_row, new_col))
 
         # castling
-        # TODO can king castle while in check?
-        if self.is_king_in_check(self.current_player):
-            return valid_moves
-
         opponent = "Black" if self.current_player == "White" else "White"
         pos = (row, col)
         if not self.pieces_moved[pos]: # castling is available
             # queenside
             if not self.pieces_moved[(row, 0)] \
-            and all(self.board[row][c] == "" for c in [1, 2, 3]) \
-            and not self.is_square_attacked(row, 3, opponent) \
-            and not self.is_square_attacked(row, 2, opponent):
+            and all(self.board[row][c] == "" for c in [1, 2, 3]):
                 valid_moves.append((row, 2))
             # kingside
             if not self.pieces_moved[(row, 7)] \
-            and all(self.board[row][c] == "" for c in [5, 6]) \
-            and not self.is_square_attacked(row, 5, opponent):
+            and all(self.board[row][c] == "" for c in [5, 6]):
                 valid_moves.append((row, 6))
 
         return valid_moves
@@ -299,6 +310,7 @@ class ChessLogic:
         Returns:
             str: Extended Chess Notation for the move, if valid. Empty str if the move is invalid
         """
+        # stalemate if you can't do shit                                                                                                                                                                                                                                                                                                                        
 
         # parsing
         start_pos = move[0:2]
@@ -331,14 +343,23 @@ class ChessLogic:
 
         # castling check here
         if is_castling:
+            opponent = "Black" if self.current_player == "White" else "White"
+
             if end_col > start_col: # kingside
                 self.board[start_row][7] = ""
                 self.board[start_row][5] = "R" if self.current_player == "White" else "r"
                 notation = "0-0"
+                if self.is_square_attacked(start_row, 5, opponent):
+                    self.board = original_board
+                    return ""
             else: # queenside
                 self.board[start_row][0] = ""
                 self.board[start_row][3] = "R" if self.current_player == "White" else "r"
                 notation = "0-0-0"
+                if self.is_square_attacked(start_row, 3, opponent) \
+                or self.is_square_attacked(start_row, 2, opponent):
+                    self.board = original_board
+                    return ""
 
         if is_en_passant:
             # start row is where the opp. pawn is
@@ -372,5 +393,11 @@ class ChessLogic:
         self.current_player = "Black" if self.current_player == "White" else "White"
 
         self._build_valid_moves()
+
+        # need to have the valid moves dictionary built to check
+        if self.is_king_in_check(self.current_player) and not self.has_legal_move(self.current_player):
+            self.result = "w" if self.current_player == "Black" else "b"
+        elif not self.is_king_in_check(self.current_player) and not self.has_legal_move(self.current_player):
+            self.result = "d"
 
         return notation
