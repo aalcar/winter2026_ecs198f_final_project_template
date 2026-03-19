@@ -251,23 +251,39 @@ class ChessLogic:
         is_capture = self.board[end_row][end_col] != ""
         is_promotion = self.is_move_promotion(moving_piece, end_row)
 
+        # castling check here
+        is_castling = moving_piece.lower() == "k" and abs(start_col - end_col) == 2
+        if is_castling:
+            if end_col > start_col: # kingside
+                self.board[start_row][7] = ""
+                self.board[start_row][5] = "R" if self.current_player == "White" else "r"
+                notation = "0-0"
+            else: # queenside
+                self.board[start_row][0] = ""
+                self.board[start_row][3] = "R" if self.current_player == "White" else "r"
+                notation = "0-0-0"
+
+        is_en_passant = moving_piece.lower() == "p" and is_capture and self.board[end_row][end_col] == ""
+        if is_en_passant:
+            # start row is where the opp. pawn is
+            is_capture = True
+            self.board[start_row][end_col] = ""
+
         # update board
         self.board[start_row][start_col] = ""
         self.board[end_row][end_col] = moving_piece
 
-        # do notation?
-        # TODO is this right lol
-        notation = "" if moving_piece.lower() == "p" else f"{moving_piece}"
+        # construct notation
+        if not is_castling:
+            notation = "" if moving_piece.lower() == "p" else f"{moving_piece}"
 
-        if is_capture:
-            notation += f"{start_pos}x{end_pos}"
-        else:
-            notation += f"{start_pos}{end_pos}"
-        
-        if is_promotion:
-            notation += "=Q"
-
-        # TODO castling notation
+            if is_capture:
+                notation += f"{start_pos}x{end_pos}"
+            else:
+                notation += f"{start_pos}{end_pos}"
+            
+            if is_promotion:
+                notation += "=Q"
         
         # update properties
         self.last_move = (start_row, start_col, end_row, end_col)
